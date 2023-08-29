@@ -2,9 +2,12 @@ const express = require("express");
 const axios = require("axios")
 const fs = require("fs")
 const app = express();
+const cors = require("cors")
+app.use(cors());
 app.set("view engine", "ejs");
 app.set("views", "./views");
-app.use(express.static("public"));
+require('dotenv').config();
+
 const moment = require("moment");
 
 const server = require("http").Server(app);
@@ -14,10 +17,15 @@ const io = require("socket.io")(server, {
 		origin: "*",
 	}
 });
-//route api
-app.io = io;
-//route api
 
+const coinInit = require("./apis/coinApi")
+//Application EndPoint API Router
+coinInit(app)
+//Application EndPoint API Router
+
+app.io = io;
+
+console.log()
 const useSocket = (callback) => {
 
 	io.on('connection', socket => {
@@ -29,14 +37,6 @@ const useSocket = (callback) => {
 		});
 	});
 }
-
-
-
-
-
-
-
-
 
 
 const { createAuthRequest, readJsonn } = require("./lunance");
@@ -66,7 +66,7 @@ ws.on('open', () => {
 
 	const request1 = {
 		e: "subscribe",
-		rooms: [`pair-${pair[0] + "-" + pair[1]}`]
+		rooms: [`pair-${pair[0] + "-" + pair[1]}`, `tickers`]
 	}
 
 	const request2 = {
@@ -81,10 +81,10 @@ ws.on('open', () => {
 		e: "init-ohlcv",
 		i: "1d",
 		rooms: [
-		   "pair-BTC-USD"
+			"pair-BTC-USD"
 		]
 	}
-	const request = [ request1 ];
+	const request = [request1];
 
 	request.map(item => {
 		ws.send(JSON.stringify(item))
@@ -133,7 +133,7 @@ ws.on('open', () => {
 // Per message packet:
 ws.on('message', (data) => {
 	data = JSON.parse(data);
-	console.log(data)
+	// console.log(data)
 
 	switch (data.e) {
 		case "md":
@@ -162,6 +162,9 @@ ws.on('message', (data) => {
 			break;
 		case "history":
 			app.io.sockets.emit("history_data", data);
+			break;
+		case "tick":
+			console.log(data)
 			break;
 		default:
 
@@ -203,7 +206,9 @@ wss.on('open', () => {
 					resolution: data.resolution || "1d"
 				},
 			}
+			const request3 = {
 
+			}
 
 			const requestArr = [request1, request2];
 			requestArr.map(item => {
@@ -241,9 +246,6 @@ wss.on('message', (data) => {
 wss.on('error', console.log)
 //||wss
 
-app.get("/", (req, res) => {
-	res.render("index");
-})
 
 server.listen(3000, (params) => {
 	console.log("Server Start")
