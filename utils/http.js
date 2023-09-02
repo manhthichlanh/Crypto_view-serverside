@@ -12,4 +12,8 @@ const coingeckerApi = axios.create({
     method: 'GET',
     baseURL: 'https://api.coingecko.com',
 });
-module.exports = { coinmarketcapApi, coingeckerApi }
+const cexApi = axios.create({
+    method: 'GET',
+    baseURL: 'https://api.plus.cex.io/rest-public',
+});
+module.exports = { coinmarketcapApi, coingeckerApi, cexApi }
