@@ -165,12 +165,33 @@ module.exports = (app) => {
 
         })
 
-        ws.on('error', (error) => console.log(error))
+        ws.on('error', (error) => {
+            console.log("Hệ thống xảy ra lỗi!")
+            console.error(error);
+            try {
+                console.log('Khởi tạo kết nối mới');
+                initCexSocketLAN1();
+                console.log('Khởi tạo thành công');
+
+            } catch (error) {
+                console.log('Khởi tạo thất bại');
+                console.error(error);
+
+            }
+        })
 
         ws.on('close', () => {
             console.log('Kết nối đã đóng');
-            console.log('Khởi tạo kết nối mới');
+            try {
+                console.log('Khởi tạo kết nối mới');
+                initCexSocketLAN1();
+                console.log('Khởi tạo thành công');
 
+            } catch (error) {
+                console.log('Khởi tạo thất bại');
+                console.error(error);
+
+            }
             // Xử lý các công việc sau khi kết nối đã đóng
         });
     }
