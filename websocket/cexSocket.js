@@ -5,16 +5,11 @@ const moment = require("moment");
 const { createAuthRequest } = require("../lunance");
 const { cexApi } = require("../utils/http");
 
-module.exports = (app) => {
-    const server = require("http").Server(app);
-
-    const io = require("socket.io")(server, {
-        cors: {
-            origin: "*",
-        }
-    });
-
+module.exports = (uni) => {
+    const { app, io } = uni;
     app.io = io;
+    const appIO = app.io;
+
 
     const useSocket = (callback) => {
 
@@ -27,6 +22,7 @@ module.exports = (app) => {
             });
         });
     }
+
 
 
     const initCexSocketLAN1 = () => {
@@ -52,12 +48,15 @@ module.exports = (app) => {
                 console.error(error)
             }
             console.log(pair)
-            const request1 = {
-                e: "subscribe",
-                rooms: pair.map(item => {
-                    return `pair-${item}`;
-                })
+            const request1 = (pair) => {
+                return {
+                    e: "subscribe",
+                    rooms: pair.map(item => {
+                        return `pair-${item}`;
+                    })
+                }
             }
+
 
             const request2 = {
                 e: 'order-book-subscribe',
@@ -77,7 +76,14 @@ module.exports = (app) => {
             const request = [request1];
 
             request.map(item => {
-                ws.send(JSON.stringify(item))
+                ws.send(JSON.stringify(item(pair)))
+            });
+            useSocket((socket) => {
+                socket.on("get_md", (data) => {
+                    if (data) {
+                        ws.send(JSON.stringify(request1([data])))
+                    }
+                })
             })
             //auth app;
             ws.send(authRequest);
@@ -143,17 +149,19 @@ module.exports = (app) => {
                         return Number(total + Number(sell[0] * sell[1] * satoshi));
                     }, 0);
                     const newData = { id, buy: newBuy, sell: newSell, buy_total: max_buy, sell_total: max_sell, pair }
-                    app.io.sockets.emit("md_data[" + pair.split(":").join("-").concat("]"), newData);
+                    appIO.sockets.emit("md_data[" + pair.split(":").join("-").concat("]"), newData);
 
                     break;
                 case "md_groupped":
-                    app.io.sockets.emit("md_groupped_data", data);
+                    // console.log(data)
+
+                    appIO.sockets.emit("md_groupped_data", data);
                     break;
                 case "md_update":
-                    app.io.sockets.emit("md_update_data", data);
+                    appIO.sockets.emit("md_update_data", data);
                     break;
                 case "history":
-                    app.io.sockets.emit("history_data", data);
+                    appIO.sockets.emit("history_data", data);
                     break;
                 case "tick":
                     console.log(data)
@@ -265,8 +273,8 @@ module.exports = (app) => {
     // //     //||wss
     // // }
 
-    // // initCexSocketLAN1(app.io);
-    // // initCexSocketLAN2(app.io);
+    // // initCexSocketLAN1(appIO);
+    // // initCexSocketLAN2(appIO);
     initCexSocketLAN1();
 }
 

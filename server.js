@@ -11,13 +11,22 @@ const coinInit = require("./apis/coinApi")
 coinInit(app)
 //Application EndPoint API Router
 
+
+
+const server = require("http").Server(app);
+
+const io = require("socket.io")(server, {
+	cors: {
+		origin: "*",
+	}
+});
+
+// app.io = io;
 //Init Websocket Cex server
 const initSocket = require("./websocket/cexSocket");
-initSocket(app);
+initSocket({ io, app });
 //Init Websocket Cex server
-
-
-app.listen(3000, (params) => {
+server.listen(3000, (params) => {
 	console.log("Server Start")
 });
 
