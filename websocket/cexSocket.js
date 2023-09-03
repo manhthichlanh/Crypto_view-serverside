@@ -75,9 +75,9 @@ module.exports = (uni) => {
             // }
             const request = [request1];
 
-            request.map(item => {
-                ws.send(JSON.stringify(item(pair)))
-            });
+            // request.map(item => {
+            //     ws.send(JSON.stringify(item(pair)))
+            // });
             useSocket((socket) => {
                 socket.on("get_md", (data) => {
                     if (data) {
@@ -133,7 +133,7 @@ module.exports = (uni) => {
 
             switch (data.e) {
                 case "md":
-                    console.log(data)
+                    // console.log(data)
                     const { id, buy, sell, buy_total, pair, sell_total } = data.data;
                     const satoshi = 1 / 100000000;
                     const newBuy = buy.map(item => {
@@ -143,12 +143,25 @@ module.exports = (uni) => {
                         return [item[0], item[1] * satoshi];
                     })
                     const max_buy = buy.reduce((total, buy) => {
-                        return total + Number(buy[0] * buy[1] * satoshi);
+                        const currenValue = Number(buy[0] * buy[1] * satoshi);
+
+                        if (currenValue > total) {
+                            return currenValue
+                        } else {
+                            return total
+                        }
                     }, 0);
                     const max_sell = sell.reduce((total, sell) => {
-                        return Number(total + Number(sell[0] * sell[1] * satoshi));
+                        const currenValue = Number(sell[0] * sell[1] * satoshi);
+
+                        if (currenValue > total) {
+                            return currenValue
+                        } else {
+                            return total
+                        }
                     }, 0);
-                    const newData = { id, buy: newBuy, sell: newSell, buy_total: max_buy, sell_total: max_sell, pair }
+                    const newData = { id, buy: newBuy, sell: newSell, buy_total, sell_total, max_buy, max_sell, pair }
+                    // console.log(max_buy)
                     appIO.sockets.emit("md_data[" + pair.split(":").join("-").concat("]"), newData);
 
                     break;
