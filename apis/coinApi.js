@@ -4,8 +4,8 @@ const { coinmarketcapApi, coingeckerApi } = require("../utils/http")
 module.exports = (app) => {
     app.get('/api/currency/info', async (req, res) => {
         try {
-            const { limit } = req.query;
-            const response = await coinmarketcapApi.get(`/v1/cryptocurrency/listings/latest?limit=${limit}`);
+            const { limit, start } = req.query;
+            const response = await coinmarketcapApi.get(`/v1/cryptocurrency/listings/latest?limit=${limit ? limit : 100}&start=${start ? start : 1}`);
             const data = response.data.data;
 
             const logoResponse = await coinmarketcapApi.get('/v1/cryptocurrency/info', {
